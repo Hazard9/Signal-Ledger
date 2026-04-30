@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Social Receipt</title>
+  <meta name="theme-color" content="#0f1115" />
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --panel2: #20242d;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --soft: #272b35;
+      --line: #333844;
+      --accent: #f5c542;
+      --green: #3ddc97;
+      --red: #ff6b6b;
+      --blue: #78a6ff;
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    .app {
+      max-width: 430px;
+      min-height: 100vh;
+      margin: 0 auto;
+      padding: 18px 16px 96px;
+      background: radial-gradient(circle at top, #1d2430 0%, #0f1115 42%);
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .eyebrow {
+      color: var(--accent);
+      font-size: 12px;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    h1, h2, h3, p { margin: 0; }
+    h1 { font-size: 27px; line-height: 1.05; }
+    h2 { font-size: 20px; margin-bottom: 12px; }
+    h3 { font-size: 15px; margin-bottom: 6px; }
+    p { color: var(--muted); line-height: 1.45; font-size: 14px; }
+
+    .card {
+      background: rgba(23, 26, 33, .94);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: var(--radius);
+      padding: 16px;
+      margin-bottom: 14px;
+      box-shadow: 0 14px 35px rgba(0,0,0,.22);
+    }
+
+    .hero-card {
+      background: linear-gradient(145deg, #222838, #171a21 62%);
+      border: 1px solid rgba(245,197,66,.25);
+    }
+
+    .friend-card {
+      background: linear-gradient(145deg, rgba(245,197,66,.16), rgba(23,26,33,.96));
+      border: 1px solid rgba(245,197,66,.28);
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .mini-card {
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .metric {
+      font-size: 24px;
+      font-weight: 900;
+      margin-top: 6px;
+    }
+
+    .label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    button {
+      border: 0;
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 800;
+      color: #111;
+      background: var(--accent);
+      cursor: pointer;
+      min-height: 46px;
+    }
+
+    .ghost {
+      background: var(--soft);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.08);
+    }
+
+    .danger { background: #442027; color: #ffd7dd; }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .action-btn {
+      background: var(--panel2);
+      color: var(--text);
+      border: 1px solid rgba(255,255,255,.09);
+      text-align: left;
+      min-height: 74px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      justify-content: center;
+      gap: 4px;
+    }
+
+    .action-btn span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .input-group { margin-bottom: 12px; }
+    .input-group label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+      margin-bottom: 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background: #10131a;
+      color: var(--text);
+      border: 1px solid var(--line);
+      border-radius: 13px;
+      padding: 12px;
+      outline: none;
+    }
+
+    textarea { min-height: 78px; resize: vertical; }
+
+    .pill-row {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+
+    .pill {
+      white-space: nowrap;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: var(--panel);
+      border: 1px solid rgba(255,255,255,.08);
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .pill.active {
+      color: #111;
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+
+    .lead-card {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .status {
+      display: inline-flex;
+      width: fit-content;
+      border-radius: 999px;
+      padding: 5px 9px;
+      background: rgba(120,166,255,.12);
+      color: #bcd1ff;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .status.hot { background: rgba(61,220,151,.12); color: #aef3d4; }
+    .status.ghosted { background: rgba(255,107,107,.12); color: #ffc2c2; }
+    .status.closed { background: rgba(245,197,66,.13); color: #ffe391; }
+
+    .timeline {
+      position: relative;
+      padding-left: 18px;
+    }
+
+    .timeline:before {
+      content: "";
+      position: absolute;
+      left: 5px;
+      top: 4px;
+      bottom: 4px;
+      width: 2px;
+      background: var(--line);
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 14px;
+      padding: 12px;
+      background: #121620;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 14px;
+    }
+
+    .timeline-item:before {
+      content: "";
+      position: absolute;
+      left: -18px;
+      top: 16px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    .bottom-nav {
+      position: fixed;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 100%;
+      max-width: 430px;
+      background: rgba(15,17,21,.96);
+      backdrop-filter: blur(14px);
+      border-top: 1px solid rgba(255,255,255,.08);
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      padding: 9px 7px 11px;
+      z-index: 20;
+    }
+
+    .nav-btn {
+      background: transparent;
+      color: var(--muted);
+      border-radius: 12px;
+      min-height: 48px;
+      padding: 7px 3px;
+      font-size: 11px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .nav-btn.active {
+      background: var(--panel2);
+      color: var(--text);
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.68);
+      display: none;
+      align-items: flex-end;
+      justify-content: center;
+      z-index: 50;
+    }
+
+    .modal.active { display: flex; }
+
+    .sheet {
+      width: 100%;
+      max-width: 430px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: #151922;
+      border-radius: 24px 24px 0 0;
+      padding: 18px 16px 28px;
+      border-top: 1px solid rgba(255,255,255,.1);
+    }
+
+    .empty {
+      text-align: center;
+      padding: 24px 12px;
+      color: var(--muted);
+    }
+
+    .toast {
+      position: fixed;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 28px);
+      max-width: 402px;
+      background: #1c2230;
+      border: 1px solid rgba(245,197,66,.35);
+      color: var(--text);
+      padding: 14px;
+      border-radius: 16px;
+      box-shadow: 0 18px 40px rgba(0,0,0,.34);
+      display: none;
+      z-index: 100;
+    }
+
+    .toast.active { display: block; }
+
+    .tiny { font-size: 12px; color: var(--muted); }
+    .spacer { height: 10px; }
+  </style>
+</head>
+<body>
+  <div id="toast" class="toast"></div>
+
+  <main class="app">
+    <section id="today" class="screen active">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Social Receipt</div>
+          <h1>Today’s money moves</h1>
+        </div>
+        <button class="ghost" onclick="resetDemo()">Reset</button>
+      </div>
+
+      <div class="card friend-card">
+        <div class="eyebrow">Support Friend</div>
+        <h2 id="friendMessage">Your next sale is probably hiding in a follow-up.</h2>
+        <p id="friendSubtext">Open the app, take one revenue action, log the receipt, keep moving.</p>
+        <div class="spacer"></div>
+        <button onclick="randomNudge()">Give Me a Push</button>
+      </div>
+
+      <div class="card hero-card">
+        <div class="eyebrow">Daily Command</div>
+        <h2 id="dailyPriority">Follow up with warm leads</h2>
+        <p id="dailyWhy">Your warm conversations are where the money is closest. Do not chase new leads before touching these.</p>
+        <div class="spacer"></div>
+        <button onclick="switchTab('leads')">Start Follow-Ups</button>
+      </div>
+
+      <div class="grid2">
+        <div class="mini-card"><div class="label">Posts</div><div class="metric" id="postCount">0 / 1</div></div>
+        <div class="mini-card"><div class="label">Comments</div><div class="metric" id="commentCount">0 / 10</div></div>
+        <div class="mini-card"><div class="label">DMs</div><div class="metric" id="dmCount">0 / 10</div></div>
+        <div class="mini-card"><div class="label">Follow-Ups</div><div class="metric" id="followCount">0 / 5</div></div>
+      </div>
+
+      <h2>Hot / Warm Leads</h2>
+      <div id="todayLeads"></div>
+    </section>
+
+    <section id="log" class="screen">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Fast Capture</div>
+          <h1>Log activity</h1>
+        </div>
+      </div>
+      <div class="action-grid">
+        <button class="action-btn" onclick="openLog('Post')">Post <span>Published content</span></button>
+        <button class="action-btn" onclick="openLog('Comment')">Comment <span>Public touch</span></button>
+        <button class="action-btn" onclick="openLog('DM Sent')">DM Sent <span>Outbound message</span></button>
+        <button class="action-btn" onclick="openLog('Follow-Up')">Follow-Up <span>Revenue recovery</span></button>
+        <button class="action-btn" onclick="openLog('Reply Received')">Reply Received <span>Signal captured</span></button>
+        <button class="action-btn" onclick="openLog('Call Booked')">Call Booked <span>High intent</span></button>
+        <button class="action-btn" onclick="openLog('Sale')">Sale <span>Closed receipt</span></button>
+        <button class="action-btn" onclick="openLeadForm()">New Lead <span>Add pipeline</span></button>
+      </div>
+    </section>
+
+    <section id="leads" class="screen">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Pipeline</div>
+          <h1>Leads</h1>
+        </div>
+        <button onclick="openLeadForm()">Add</button>
+      </div>
+      <div class="pill-row" id="stageFilters"></div>
+      <div id="leadList"></div>
+    </section>
+
+    <section id="receipts" class="screen">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Attribution</div>
+          <h1>Sales receipts</h1>
+        </div>
+      </div>
+      <div id="receiptList"></div>
+    </section>
+
+    <section id="insights" class="screen">
+      <div class="topbar">
+        <div>
+          <div class="eyebrow">Pattern Finder</div>
+          <h1>What’s working</h1>
+        </div>
+      </div>
+      <div id="insightCards"></div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav">
+    <button class="nav-btn active" data-tab="today" onclick="switchTab('today')">Today</button>
+    <button class="nav-btn" data-tab="leads" onclick="switchTab('leads')">Leads</button>
+    <button class="nav-btn" data-tab="log" onclick="switchTab('log')">Log</button>
+    <button class="nav-btn" data-tab="receipts" onclick="switchTab('receipts')">Receipts</button>
+    <button class="nav-btn" data-tab="insights" onclick="switchTab('insights')">Insights</button>
+  </nav>
+
+  <div id="logModal" class="modal">
+    <div class="sheet">
+      <div class="row" style="margin-bottom:14px;">
+        <h2 id="logTitle">Save Receipt</h2>
+        <button class="ghost" onclick="closeModal('logModal')">Close</button>
+      </div>
+      <div class="input-group">
+        <label>Lead</label>
+        <select id="logLead"></select>
+      </div>
+      <div class="input-group">
+        <label>Platform</label>
+        <select id="logPlatform">
+          <option>LinkedIn</option><option>Instagram</option><option>TikTok</option><option>Email</option><option>Reddit</option><option>Other</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <label>Notes</label>
+        <textarea id="logNotes" placeholder="What happened?"></textarea>
+      </div>
+      <div class="input-group" id="saleAmountWrap" style="display:none;">
+        <label>Sale Amount</label>
+        <input id="saleAmount" type="number" placeholder="47" />
+      </div>
+      <button style="width:100%;" onclick="saveLog()">Save Receipt</button>
+    </div>
+  </div>
+
+  <div id="leadModal" class="modal">
+    <div class="sheet">
+      <div class="row" style="margin-bottom:14px;">
+        <h2>New Lead</h2>
+        <button class="ghost" onclick="closeModal('leadModal')">Close</button>
+      </div>
+      <div class="input-group"><label>Name</label><input id="leadName" placeholder="Nik Hall" /></div>
+      <div class="input-group"><label>Platform</label><select id="leadPlatform"><option>LinkedIn</option><option>Instagram</option><option>TikTok</option><option>Email</option><option>Reddit</option><option>Other</option></select></div>
+      <div class="input-group"><label>Stage</label><select id="leadStage"><option>New</option><option>Warm</option><option>Hot</option><option>Ghosted</option><option>Closed</option><option>Lost</option></select></div>
+      <div class="input-group"><label>Potential Value</label><select id="leadValue"><option>$47 Audit</option><option>$97 Loom Audit</option><option>$197 Pattern Audit</option><option>$9/mo App</option><option>Unknown</option></select></div>
+      <div class="input-group"><label>Next Action</label><input id="leadNext" placeholder="Send proof-based follow-up" /></div>
+      <button style="width:100%;" onclick="saveLead()">Add Lead</button>
+    </div>
+  </div>
+
+  <div id="detailModal" class="modal">
+    <div class="sheet">
+      <div class="row" style="margin-bottom:14px;">
+        <h2 id="detailName">Lead</h2>
+        <button class="ghost" onclick="closeModal('detailModal')">Close</button>
+      </div>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <script>
+    const stages = ['New', 'Warm', 'Hot', 'Ghosted', 'Closed', 'Lost'];
+    let activeStage = 'Warm';
+    let currentAction = '';
+
+    const starter = {
+      leads: [
+        { id: makeId(), name: 'Nik Hall', platform: 'LinkedIn', stage: 'Warm', value: '$47 Audit', next: 'Deliver 3-point diagnostic preview', created: Date.now() - 86400000 },
+        { id: makeId(), name: 'Newsletter Guy', platform: 'LinkedIn', stage: 'New', value: '$97 Loom Audit', next: 'Send soft diagnostic opener', created: Date.now() - 3600000 }
+      ],
+      logs: [],
+      lastNudge: 0
+    };
+
+    function makeId() {
+      if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+      return 'id-' + Math.random().toString(36).slice(2) + Date.now();
+    }
+
+    function load() {
+      const saved = localStorage.getItem('socialReceiptData');
+      if (!saved) {
+        localStorage.setItem('socialReceiptData', JSON.stringify(starter));
+        return starter;
+      }
+      return JSON.parse(saved);
+    }
+
+    function save(data) { localStorage.setItem('socialReceiptData', JSON.stringify(data)); }
+    function data() { return load(); }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(tab).classList.add('active');
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+      render();
+    }
+
+    function openLog(action) {
+      currentAction = action;
+      document.getElementById('logTitle').innerText = action === 'Sale' ? 'Log Sale Receipt' : `Log ${action}`;
+      document.getElementById('saleAmountWrap').style.display = action === 'Sale' ? 'block' : 'none';
+      fillLeadSelect();
+      document.getElementById('logModal').classList.add('active');
+    }
+
+    function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+    function openLeadForm() { document.getElementById('leadModal').classList.add('active'); }
+
+    function fillLeadSelect() {
+      const select = document.getElementById('logLead');
+      const leads = data().leads;
+      select.innerHTML = '<option value="">No lead / general activity</option>' + leads.map(l => `<option value="${l.id}">${l.name} - ${l.stage}</option>`).join('');
+    }
+
+    function saveLead() {
+      const d = data();
+      const name = document.getElementById('leadName').value.trim();
+      if (!name) return alert('Lead name required');
+
+      d.leads.unshift({
+        id: makeId(),
+        name,
+        platform: document.getElementById('leadPlatform').value,
+        stage: document.getElementById('leadStage').value,
+        value: document.getElementById('leadValue').value,
+        next: document.getElementById('leadNext').value.trim() || 'Log next touch',
+        created: Date.now()
+      });
+
+      save(d);
+      ['leadName','leadNext'].forEach(id => document.getElementById(id).value = '');
+      closeModal('leadModal');
+      render();
+      switchTab('leads');
+      showToast('Lead added. Now create the next receipt.');
+    }
+
+    function saveLog() {
+      const d = data();
+      const leadId = document.getElementById('logLead').value;
+      const amount = Number(document.getElementById('saleAmount').value || 0);
+
+      d.logs.unshift({
+        id: makeId(),
+        action: currentAction,
+        leadId,
+        platform: document.getElementById('logPlatform').value,
+        notes: document.getElementById('logNotes').value.trim(),
+        amount,
+        created: Date.now()
+      });
+
+      if (leadId) {
+        const lead = d.leads.find(l => l.id === leadId);
+        if (lead) {
+          if (currentAction === 'Sale') lead.stage = 'Closed';
+          if (currentAction === 'Reply Received' && lead.stage === 'New') lead.stage = 'Warm';
+          if (currentAction === 'Call Booked') lead.stage = 'Hot';
+          lead.next = nextActionFor(currentAction);
+        }
+      }
+
+      save(d);
+      document.getElementById('logNotes').value = '';
+      document.getElementById('saleAmount').value = '';
+      closeModal('logModal');
+      render();
+      showToast(nudgeAfterAction(currentAction));
+    }
+
+    function nextActionFor(action) {
+      const map = {
+        'DM Sent': 'Wait for reply or follow up tomorrow',
+        'Follow-Up': 'Watch for reply within 24 hours',
+        'Reply Received': 'Send diagnostic preview or offer next step',
+        'Call Booked': 'Prepare proof points before call',
+        'Sale': 'Deliver and ask what triggered the yes',
+        'Post': 'Engage with comments',
+        'Comment': 'Check for profile visit or reply'
+      };
+      return map[action] || 'Log next touch';
+    }
+
+    function nudgeAfterAction(action) {
+      const map = {
+        'Post': 'Good. Now do not disappear. Watch for comments and turn one into a conversation.',
+        'Comment': 'That is a signal planted. One more smart comment beats ten random DMs.',
+        'DM Sent': 'DM logged. Do not judge it today. Your job is to create enough signals.',
+        'Follow-Up': 'That is where money usually hides. Strong move.',
+        'Reply Received': 'Reply captured. Move fast while the lead is warm.',
+        'Call Booked': 'Now prepare proof. Do not wing the call.',
+        'Sale': 'Receipt logged. Study the chain so you can repeat it.'
+      };
+      return map[action] || 'Receipt saved.';
+    }
+
+    function render() {
+      renderToday();
+      renderStages();
+      renderLeads();
+      renderReceipts();
+      renderInsights();
+      updateFriend();
+    }
+
+    function isToday(ts) {
+      const a = new Date(ts), b = new Date();
+      return a.toDateString() === b.toDateString();
+    }
+
+    function countToday(action) {
+      return data().logs.filter(l => l.action === action && isToday(l.created)).length;
+    }
+
+    function renderToday() {
+      document.getElementById('postCount').innerText = `${countToday('Post')} / 1`;
+      document.getElementById('commentCount').innerText = `${countToday('Comment')} / 10`;
+      document.getElementById('dmCount').innerText = `${countToday('DM Sent')} / 10`;
+      document.getElementById('followCount').innerText = `${countToday('Follow-Up')} / 5`;
+
+      const d = data();
+      const warm = d.leads.filter(l => ['Warm','Hot'].includes(l.stage));
+      document.getElementById('dailyPriority').innerText = warm.length ? `Follow up with ${warm.length} warm lead${warm.length > 1 ? 's' : ''}` : 'Create 3 new sales signals';
+      document.getElementById('dailyWhy').innerText = warm.length ? 'These conversations are closer to revenue than cold outreach. Touch them before chasing new leads.' : 'No warm pipeline yet. Create signals first: comment, DM, and log replies.';
+
+      document.getElementById('todayLeads').innerHTML = warm.slice(0,3).map(leadCard).join('') || '<div class="card empty">No warm leads yet. Add one from the Log screen.</div>';
+    }
+
+    function updateFriend() {
+      const d = data();
+      const warm = d.leads.filter(l => ['Warm','Hot'].includes(l.stage)).length;
+      const dms = countToday('DM Sent');
+      const followups = countToday('Follow-Up');
+      const comments = countToday('Comment');
+
+      let message = 'Your next sale is probably hiding in a follow-up.';
+      let subtext = 'Open the app, take one revenue action, log the receipt, keep moving.';
+
+      if (warm > 0 && followups === 0) {
+        message = `You have ${warm} warm lead${warm > 1 ? 's' : ''}. Touch them before anything else.`;
+        subtext = 'New outreach can wait. Warm pipeline comes first.';
+      } else if (dms >= 5 && followups === 0) {
+        message = 'You are starting conversations but not recovering them.';
+        subtext = 'Log at least one follow-up before sending more cold DMs.';
+      } else if (comments < 3) {
+        message = 'Plant more public signals today.';
+        subtext = 'Smart comments warm up the room before you enter the DM.';
+      } else if (followups >= 3) {
+        message = 'Good. You are doing the uncomfortable work.';
+        subtext = 'Now watch which follow-up creates the reply.';
+      }
+
+      document.getElementById('friendMessage').innerText = message;
+      document.getElementById('friendSubtext').innerText = subtext;
+    }
+
+    function randomNudge() {
+      const prompts = [
+        'Pick one lead you are avoiding. Send the cleanest next message.',
+        'Do one comment that makes someone think: “this person gets it.”',
+        'Check your warm leads before you create anything new.',
+        'One proof-based follow-up beats another hour of planning.',
+        'Log the action even if it feels small. Small receipts reveal the pattern.',
+        'Stop refreshing. Create a signal.',
+        'The goal is not motivation. The goal is one more revenue action.'
+      ];
+      showToast(prompts[Math.floor(Math.random() * prompts.length)]);
+    }
+
+    function renderStages() {
+      document.getElementById('stageFilters').innerHTML = stages.map(s => `<div class="pill ${activeStage === s ? 'active' : ''}" onclick="activeStage='${s}'; renderLeads(); renderStages();">${s}</div>`).join('');
+    }
+
+    function leadCard(l) {
+      const cls = l.stage.toLowerCase();
+      return `<div class="card lead-card">
+        <div class="row"><div><h3>${escapeHtml(l.name)}</h3><p>${l.platform} · ${l.value}</p></div><span class="status ${cls}">${l.stage}</span></div>
+        <p><strong style="color:#fff;">Next:</strong> ${escapeHtml(l.next)}</p>
+        <div class="row"><button class="ghost" onclick="openDetail('${l.id}')">Open</button><button onclick="quickTouch('${l.id}')">Log Touch</button></div>
+      </div>`;
+    }
+
+    function renderLeads() {
+      const leads = data().leads.filter(l => l.stage === activeStage);
+      document.getElementById('leadList').innerHTML = leads.map(leadCard).join('') || `<div class="card empty">No ${activeStage.toLowerCase()} leads yet.</div>`;
+    }
+
+    function quickTouch(id) {
+      openLog('Follow-Up');
+      setTimeout(() => document.getElementById('logLead').value = id, 0);
+    }
+
+    function openDetail(id) {
+      const d = data();
+      const lead = d.leads.find(l => l.id === id);
+      const logs = d.logs.filter(l => l.leadId === id).sort((a,b) => a.created - b.created);
+      document.getElementById('detailName').innerText = lead.name;
+      document.getElementById('detailContent').innerHTML = `
+        <div class="card">
+          <span class="status ${lead.stage.toLowerCase()}">${lead.stage}</span>
+          <div class="spacer"></div>
+          <p>${lead.platform} · ${lead.value}</p>
+          <div class="spacer"></div>
+          <h3>Next Best Action</h3>
+          <p>${escapeHtml(lead.next)}</p>
+          <div class="spacer"></div>
+          <button onclick="quickTouch('${lead.id}')">Log Follow-Up</button>
+        </div>
+        <h2>Timeline</h2>
+        <div class="timeline">${logs.map(logItem).join('') || '<p>No receipts logged yet.</p>'}</div>
+      `;
+      document.getElementById('detailModal').classList.add('active');
+    }
+
+    function logItem(l) {
+      return `<div class="timeline-item"><h3>${l.action}</h3><p>${new Date(l.created).toLocaleString()} · ${l.platform}</p>${l.notes ? `<p>${escapeHtml(l.notes)}</p>` : ''}${l.amount ? `<p><strong style="color:#fff;">$${l.amount}</strong></p>` : ''}</div>`;
+    }
+
+    function renderReceipts() {
+      const d = data();
+      const sales = d.logs.filter(l => l.action === 'Sale');
+      document.getElementById('receiptList').innerHTML = sales.map(s => {
+        const lead = d.leads.find(l => l.id === s.leadId);
+        const chain = d.logs.filter(l => l.leadId === s.leadId).sort((a,b) => a.created - b.created);
+        return `<div class="card">
+          <div class="eyebrow">Closed Receipt</div>
+          <h2>$${s.amount || 0} Sale</h2>
+          <p>Buyer: ${lead ? escapeHtml(lead.name) : 'Unknown'} · Source: ${s.platform}</p>
+          <div class="spacer"></div>
+          <div class="timeline">${chain.map(logItem).join('')}</div>
+          <p><strong style="color:#fff;">What caused the sale:</strong> Look for the action right before the reply or close. That is your repeatable move.</p>
+        </div>`;
+      }).join('') || '<div class="card empty">No sales receipts yet. Log a sale when one closes.</div>';
+    }
+
+    function renderInsights() {
+      const d = data();
+      const actions = ['Post','Comment','DM Sent','Follow-Up','Reply Received','Call Booked','Sale'];
+      const counts = actions.map(a => ({ action: a, count: d.logs.filter(l => l.action === a).length })).sort((a,b) => b.count - a.count);
+      const top = counts[0];
+      const replies = d.logs.filter(l => l.action === 'Reply Received').length;
+      const followups = d.logs.filter(l => l.action === 'Follow-Up').length;
+      const sales = d.logs.filter(l => l.action === 'Sale');
+      const salesTotal = sales.reduce((sum, l) => sum + Number(l.amount || 0), 0);
+
+      document.getElementById('insightCards').innerHTML = `
+        <div class="card"><div class="eyebrow">Best Action</div><h2>${top.count ? top.action : 'No pattern yet'}</h2><p>${top.count ? `You logged this ${top.count} time${top.count === 1 ? '' : 's'}.` : 'Log at least 10 activities before trusting patterns.'}</p></div>
+        <div class="card"><div class="eyebrow">Pipeline Health</div><h2>${d.leads.filter(l => ['Warm','Hot'].includes(l.stage)).length} warm/hot leads</h2><p>These are the leads that deserve attention before more cold outreach.</p></div>
+        <div class="card"><div class="eyebrow">Follow-Up Gap</div><h2>${followups} follow-ups</h2><p>${followups < replies ? 'You have more replies than follow-ups. Money is probably leaking here.' : 'Follow-up activity is being captured. Keep tightening the timing.'}</p></div>
+        <div class="card"><div class="eyebrow">Revenue Logged</div><h2>$${salesTotal}</h2><p>${sales.length} sale receipt${sales.length === 1 ? '' : 's'} captured.</p></div>
+      `;
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.innerText = message;
+      toast.classList.add('active');
+      clearTimeout(window.toastTimer);
+      window.toastTimer = setTimeout(() => toast.classList.remove('active'), 4200);
+    }
+
+    function resetDemo() {
+      if (!confirm('Reset all local demo data?')) return;
+      localStorage.removeItem('socialReceiptData');
+      load();
+      render();
+      showToast('Reset complete. Start fresh.');
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    setTimeout(() => {
+      const d = data();
+      if (Date.now() - (d.lastNudge || 0) > 1000 * 60 * 12) {
+        d.lastNudge = Date.now();
+        save(d);
+        randomNudge();
+      }
+    }, 2500);
+
+    render();
+  </script>
+</body>
+</html>
