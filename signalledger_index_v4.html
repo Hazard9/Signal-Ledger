@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Signal Ledger v4</title>
+  <meta name="description" content="A revenue behavior enforcement system for creators, freelancers, and solo sellers."/>
+  <style>
+    :root{
+      --bg:#06070a;
+      --panel:#10131a;
+      --panel2:#171b25;
+      --panel3:#0b0e14;
+      --line:#2a3142;
+      --text:#f6f8fc;
+      --muted:#a6afc1;
+      --soft:#747e91;
+      --green:#43e09b;
+      --blue:#7aa7ff;
+      --yellow:#ffd166;
+      --red:#ff6b6b;
+      --purple:#b692ff;
+      --orange:#ff9f43;
+      --shadow:0 24px 80px rgba(0,0,0,.48);
+      --radius:22px;
+    }
+
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:
+      radial-gradient(circle at 10% -10%,rgba(67,224,155,.18),transparent 32%),
+      radial-gradient(circle at 90% 0%,rgba(122,167,255,.13),transparent 30%),
+      var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer;border:0}
+    h1,h2,h3,p{margin:0}
+    h1{font-size:22px;letter-spacing:-.045em}
+    h2{letter-spacing:-.04em}
+    .app{max-width:1220px;margin:0 auto;padding:16px 14px 96px}
+    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+    .brand{display:flex;align-items:center;gap:11px}
+    .logo{width:42px;height:42px;border-radius:15px;background:linear-gradient(135deg,var(--green),var(--blue));box-shadow:0 0 38px rgba(67,224,155,.24)}
+    .sub{font-size:13px;color:var(--muted);margin-top:2px}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:999px;padding:11px 14px;background:var(--panel2);color:var(--text);border:1px solid var(--line);transition:.14s ease;text-decoration:none;white-space:nowrap}
+    .btn:hover{transform:translateY(-1px);border-color:#3d465a}
+    .btn.primary{background:var(--green);border-color:var(--green);color:#04100a;font-weight:900}
+    .btn.blue{background:var(--blue);border-color:var(--blue);color:#07101e;font-weight:900}
+    .btn.warn{background:rgba(255,209,102,.13);border-color:rgba(255,209,102,.36);color:#ffe1a3}
+    .btn.danger{background:rgba(255,107,107,.13);border-color:rgba(255,107,107,.36);color:#ffaaaa}
+    .btn.ghost{background:transparent}
+    .view{display:none}.view.active{display:block}
+    .card{background:linear-gradient(180deg,var(--panel),#0b0e14);border:1px solid var(--line);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow)}
+    .hero{display:grid;grid-template-columns:1.08fr .92fr;gap:16px;margin-bottom:16px}
+    .eyebrow{font-size:12px;letter-spacing:.13em;text-transform:uppercase;color:var(--green);font-weight:900;margin-bottom:8px}
+    .move h2{font-size:34px;line-height:1.02;margin-bottom:9px}
+    .move p{color:var(--muted);line-height:1.45;font-size:15px;max-width:720px}
+    .command{margin-top:14px;background:rgba(67,224,155,.08);border:1px solid rgba(67,224,155,.24);border-radius:18px;padding:14px}
+    .command b{display:block;margin-bottom:5px}
+    .command span{font-size:14px;color:var(--muted);line-height:1.4}
+    .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+    .session-card{display:grid;gap:12px}
+    .session-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+    .timer{font-size:46px;letter-spacing:-.07em;font-weight:950;line-height:1}
+    .timer-label{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;font-weight:900;margin-bottom:4px}
+    .score-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+    .mini-metric{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:12px}
+    .mini-metric b{font-size:24px;letter-spacing:-.05em}
+    .mini-metric span{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+    .bar{height:9px;background:#293041;border-radius:999px;overflow:hidden}
+    .fill{height:100%;background:var(--green);width:0}
+    .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:16px}
+    .stack{display:grid;gap:12px}
+    .section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+    .section-title h2{font-size:18px}
+    .quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .action-card{background:var(--panel2);border:1px solid var(--line);border-radius:18px;color:var(--text);padding:13px;text-align:left;min-height:108px;transition:.13s ease;position:relative;overflow:hidden}
+    .action-card:hover{transform:translateY(-2px);border-color:rgba(67,224,155,.48)}
+    .action-card.recommended{border-color:rgba(67,224,155,.7);box-shadow:0 0 0 1px rgba(67,224,155,.16) inset}
+    .action-card.recommended:before{content:"NEXT";position:absolute;top:9px;right:9px;font-size:10px;font-weight:950;color:#06120b;background:var(--green);border-radius:999px;padding:4px 7px}
+    .action-card strong{display:block;font-size:15px;margin-bottom:5px}
+    .action-card span{display:block;color:var(--muted);font-size:12px;line-height:1.25}
+    .action-card em{display:block;font-style:normal;color:var(--green);font-size:12px;font-weight:900;margin-top:10px}
+    .targets{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .target{background:var(--panel2);border:1px solid var(--line);border-radius:16px;padding:12px}
+    .target .row{display:flex;justify-content:space-between;margin-bottom:9px;color:var(--muted);font-size:13px}
+    .target b{color:var(--text)}
+    .lead,.receipt,.script,.insight,.empty,.rule,.session-step{background:var(--panel2);border:1px solid var(--line);border-radius:18px;padding:14px}
+    .lead{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center}
+    .lead h3{font-size:16px;margin-bottom:6px}
+    .lead p{color:var(--muted);font-size:13px;line-height:1.38}
+    .lead-priority{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 0}
+    .badge{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;padding:4px 8px;font-size:11px;font-weight:900;color:var(--muted);margin:0 4px 5px 0}
+    .badge.hot{color:#ffb3b3;background:rgba(255,107,107,.10);border-color:rgba(255,107,107,.38)}
+    .badge.warm{color:#ffe1a3;background:rgba(255,209,102,.10);border-color:rgba(255,209,102,.38)}
+    .badge.closed{color:#acf2cf;background:rgba(67,224,155,.10);border-color:rgba(67,224,155,.38)}
+    .badge.decay{color:#ffc5a6;background:rgba(255,159,67,.10);border-color:rgba(255,159,67,.38)}
+    .badge.score{color:#cdbaff;background:rgba(182,146,255,.10);border-color:rgba(182,146,255,.38)}
+    .empty{text-align:center;color:var(--muted);border-style:dashed}
+    .empty b{display:block;color:var(--text);margin-bottom:5px}
+    .script textarea{width:100%;min-height:104px;margin-top:10px;background:#090b10;color:var(--text);border:1px solid var(--line);border-radius:14px;padding:12px;resize:vertical}
+    .script p,.insight p,.rule p,.session-step p{font-size:14px;color:var(--muted);line-height:1.45;margin-top:6px}
+    .receipt{display:flex;justify-content:space-between;gap:12px}
+    .amount{color:var(--green);font-weight:950}
+    .tiny{font-size:12px;color:var(--soft)}
+    .mini-list{display:grid;gap:8px;margin-top:10px}
+    .mini-item{display:flex;justify-content:space-between;gap:8px;font-size:13px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px}
+    .coach{border:1px solid rgba(122,167,255,.32);background:rgba(122,167,255,.08)}
+    .coach h3{font-size:15px;margin-bottom:5px}
+    .coach p{font-size:14px;color:var(--muted);line-height:1.45}
+    .tabs{position:fixed;bottom:14px;left:50%;transform:translateX(-50%);display:flex;gap:4px;background:rgba(16,19,26,.9);backdrop-filter:blur(18px);border:1px solid var(--line);border-radius:999px;padding:6px;z-index:40;box-shadow:var(--shadow)}
+    .tab{border-radius:999px;padding:10px 11px;background:transparent;color:var(--muted);font-size:13px}
+    .tab.active{background:var(--text);color:#05070a;font-weight:900}
+    .modal{position:fixed;inset:0;background:rgba(0,0,0,.76);display:none;align-items:flex-end;justify-content:center;z-index:60;padding:12px}
+    .modal.show{display:flex}
+    .sheet{width:100%;max-width:620px;background:var(--panel);border:1px solid var(--line);border-radius:26px;padding:18px;box-shadow:var(--shadow);max-height:92vh;overflow:auto}
+    .sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:12px}
+    label{display:block;color:var(--muted);font-size:12px;margin:12px 0 6px}
+    input,select,textarea{width:100%;background:#090b10;color:var(--text);border:1px solid var(--line);border-radius:14px;padding:12px;outline:0}
+    input:focus,select:focus,textarea:focus{border-color:var(--green)}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .toast{position:fixed;top:14px;left:50%;transform:translateX(-50%) translateY(-10px);opacity:0;pointer-events:none;transition:.18s;z-index:90;background:var(--text);color:#05070a;border-radius:999px;padding:12px 16px;font-weight:900}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+    .lockout{border-color:rgba(255,107,107,.42);background:rgba(255,107,107,.08)}
+    .session-steps{display:grid;gap:10px;margin-top:12px}
+    .session-step.active{border-color:rgba(67,224,155,.55)}
+    .session-step.done{opacity:.7}
+    .session-step h3{font-size:15px}
+    .session-step .btn{margin-top:10px}
+    @media(max-width:930px){
+      .hero,.grid{grid-template-columns:1fr}
+      .quick-grid{grid-template-columns:repeat(2,1fr)}
+      .targets{grid-template-columns:repeat(2,1fr)}
+    }
+    @media(max-width:580px){
+      .app{padding:14px 11px 94px}
+      .topbar{align-items:flex-start}.top-actions{gap:6px}
+      .btn{padding:10px 11px;font-size:13px}
+      .card{padding:15px;border-radius:20px}
+      .move h2{font-size:27px}.timer{font-size:38px}
+      .score-strip{grid-template-columns:1fr 1fr}
+      .quick-grid{grid-template-columns:1fr 1fr}
+      .action-card{min-height:96px;padding:12px}
+      .form-grid{grid-template-columns:1fr}
+      .lead{grid-template-columns:1fr}
+      .lead .stack{grid-template-columns:1fr 1fr}
+      .tabs{width:calc(100% - 18px);justify-content:space-between}
+      .tab{font-size:12px;padding:10px 6px}
+    }
+  </style>
+</head>
+<body>
+<div class="toast" id="toast">Saved</div>
+
+<main class="app">
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo"></div>
+      <div>
+        <h1>Signal Ledger</h1>
+        <div class="sub">Revenue behavior enforcement system</div>
+      </div>
+    </div>
+    <div class="top-actions">
+      <button class="btn" onclick="supportPush()">Coach Me</button>
+      <button class="btn" onclick="openSettings()">Setup</button>
+      <button class="btn danger" onclick="resetToday()">Reset Today</button>
+    </div>
+  </header>
+
+  <section id="today" class="view active">
+    <div class="hero">
+      <section class="card move" id="moveCard">
+        <div class="eyebrow" id="moveLabel">Next Money Move</div>
+        <h2 id="nextTitle">Create your first revenue signal.</h2>
+        <p id="nextText">The app will guide your next action based on what you have actually logged.</p>
+        <div class="command">
+          <b>Command</b>
+          <span id="nextCommand">Start a revenue session and create one real conversation.</span>
+        </div>
+        <div class="actions">
+          <button class="btn primary" id="mainActionBtn" onclick="runMainAction()">Do This Now</button>
+          <button class="btn blue" onclick="startSession()">Start Revenue Session</button>
+          <button class="btn" onclick="copyRecommendedScript()">Copy Best Script</button>
+          <button class="btn" onclick="openExternal(settings.linkedinUrl || 'https://www.linkedin.com/feed/')">Open LinkedIn</button>
+        </div>
+      </section>
+
+      <section class="card session-card">
+        <div class="session-top">
+          <div>
+            <div class="timer-label" id="sessionStatus">Sprint inactive</div>
+            <div class="timer" id="timer">15:00</div>
+          </div>
+          <button class="btn primary" id="timerBtn" onclick="toggleTimer()">Start Timer</button>
+        </div>
+        <div class="bar"><div class="fill" id="scoreFill"></div></div>
+        <div class="score-strip">
+          <div class="mini-metric"><b id="scoreNum">0</b><span>action score</span></div>
+          <div class="mini-metric"><b id="streakNum">0</b><span>day streak</span></div>
+          <div class="mini-metric"><b id="pressureNum">0</b><span>pressure</span></div>
+        </div>
+        <div class="coach" id="coachBox">
+          <h3>Coach read</h3>
+          <p id="coachText">No data yet. Start with outbound and create signal.</p>
+        </div>
+      </section>
+    </div>
+
+    <div class="grid">
+      <div class="stack">
+        <section class="card">
+          <div class="section-title">
+            <div>
+              <h2>One-tap execution</h2>
+              <div class="sub">Tap first. Add detail only when it helps you sell.</div>
+            </div>
+          </div>
+          <div class="quick-grid" id="quickActions"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <h2>Revenue session path</h2>
+            <button class="btn" onclick="startSession()">Build Session</button>
+          </div>
+          <div class="session-steps" id="sessionSteps"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-title">
+            <h2>Daily targets</h2>
+            <button class="btn" onclick="openLogModal('Post')">Detailed Log</button>
+          </div>
+          <div class="targets" id="targets"></div>
+        </section>
+      </div>
+
+      <div class="stack">
+        <section class="card">
+          <div class="section-title">
+            <h2>Priority lead</h2>
+            <button class="btn primary" onclick="openLeadModal()">Add Lead</button>
+          </div>
+          <div class="stack" id="priorityLead"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-title"><h2>Open loops</h2></div>
+          <div class="stack" id="openLoops"></div>
+        </section>
+
+        <section class="card">
+          <div class="section-title"><h2>Today snapshot</h2></div>
+          <div class="score-strip">
+            <div class="mini-metric"><b id="metricActions">0</b><span>actions</span></div>
+            <div class="mini-metric"><b id="metricLeads">0</b><span>active leads</span></div>
+            <div class="mini-metric"><b id="metricSales">$0</b><span>sales</span></div>
+          </div>
+          <div class="mini-list" id="recentLog"></div>
+        </section>
+      </div>
+    </div>
+  </section>
+
+  <section id="leads" class="view">
+    <section class="card">
+      <div class="section-title">
+        <div><h2>Pipeline</h2><div class="sub">Ranked by money closeness, aging, and next action.</div></div>
+        <button class="btn primary" onclick="openLeadModal()">Add Lead</button>
+      </div>
+      <div class="stack" id="leadList"></div>
+    </section>
+  </section>
+
+  <section id="scripts" class="view">
+    <section class="card">
+      <div class="section-title">
+        <div><h2>Scripts</h2><div class="sub">Copy, send, log. No blank-page friction.</div></div>
+      </div>
+      <div class="stack" id="scriptList"></div>
+    </section>
+  </section>
+
+  <section id="receipts" class="view">
+    <section class="card">
+      <div class="section-title">
+        <div><h2>Receipts</h2><div class="sub">Proof that revenue moved.</div></div>
+        <button class="btn primary" onclick="openReceiptModal()">Save Receipt</button>
+      </div>
+      <div class="stack" id="receiptList"></div>
+    </section>
+  </section>
+
+  <section id="insights" class="view">
+    <section class="card">
+      <div class="section-title">
+        <div><h2>Pattern Finder</h2><div class="sub">Your behavior diagnosis, not generic motivation.</div></div>
+        <button class="btn" onclick="exportCSV()">Export CSV</button>
+      </div>
+      <div class="stack" id="insightList"></div>
+    </section>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button class="tab active" onclick="showView('today',this)">Today</button>
+  <button class="tab" onclick="showView('leads',this)">Leads</button>
+  <button class="tab" onclick="showView('scripts',this)">Scripts</button>
+  <button class="tab" onclick="showView('receipts',this)">Receipts</button>
+  <button class="tab" onclick="showView('insights',this)">Insights</button>
+</nav>
+
+<div class="modal" id="logModal"><div class="sheet">
+  <div class="sheet-head"><h2>Log activity</h2><button class="btn" onclick="closeModal('logModal')">Close</button></div>
+  <div class="form-grid">
+    <div><label>Type</label><select id="logType"><option>Post</option><option>Comment</option><option>DM</option><option>Follow-Up</option><option>Reply</option><option>Close Ask</option><option>Call</option><option>Sale</option></select></div>
+    <div><label>Platform</label><select id="logPlatform"><option>LinkedIn</option><option>Instagram</option><option>TikTok</option><option>Email</option><option>Reddit</option><option>Other</option></select></div>
+  </div>
+  <label>Lead name / handle</label><input id="logLead" placeholder="Optional"/>
+  <label>Notes</label><textarea id="logNotes" placeholder="What happened?"></textarea>
+  <button class="btn primary" style="width:100%;margin-top:14px" onclick="saveLog()">Save Activity</button>
+</div></div>
+
+<div class="modal" id="leadModal"><div class="sheet">
+  <div class="sheet-head"><h2>New lead</h2><button class="btn" onclick="closeModal('leadModal')">Close</button></div>
+  <label>Name or handle</label><input id="leadName" placeholder="Example: Nik Hall"/>
+  <div class="form-grid">
+    <div><label>Platform</label><select id="leadPlatform"><option>LinkedIn</option><option>Instagram</option><option>TikTok</option><option>Email</option><option>Reddit</option><option>Other</option></select></div>
+    <div><label>Stage</label><select id="leadStage"><option>New</option><option>Warm</option><option>Hot</option><option>Close Ready</option><option>Ghosted</option><option>Closed</option><option>Lost</option></select></div>
+  </div>
+  <div class="form-grid">
+    <div><label>Potential value</label><select id="leadValue"><option>$47 Audit</option><option>$97 Loom Audit</option><option>$197 Pattern Audit</option><option>$9/mo App</option><option>Unknown</option></select></div>
+    <div><label>Buying signal</label><select id="leadSignal"><option value="1">Low</option><option value="2">Medium</option><option value="3">High</option><option value="4">Asked about offer</option><option value="5">Ready to buy</option></select></div>
+  </div>
+  <label>Next action</label><input id="leadNext" placeholder="Example: Ask for the $47 audit"/>
+  <button class="btn primary" style="width:100%;margin-top:14px" onclick="saveLead()">Add Lead</button>
+</div></div>
+
+<div class="modal" id="receiptModal"><div class="sheet">
+  <div class="sheet-head"><h2>Save receipt</h2><button class="btn" onclick="closeModal('receiptModal')">Close</button></div>
+  <label>Lead / buyer</label><input id="receiptLead" placeholder="Name or handle"/>
+  <div class="form-grid">
+    <div><label>Amount</label><input id="receiptAmount" type="number" placeholder="47"/></div>
+    <div><label>Offer</label><select id="receiptOffer"><option>$47 Audit</option><option>$97 Loom Audit</option><option>$197 Pattern Audit</option><option>$9/mo App</option><option>Other</option></select></div>
+  </div>
+  <label>Notes</label><textarea id="receiptNotes" placeholder="What caused the sale?"></textarea>
+  <button class="btn primary" style="width:100%;margin-top:14px" onclick="saveReceipt()">Save Receipt</button>
+</div></div>
+
+<div class="modal" id="settingsModal"><div class="sheet">
+  <div class="sheet-head"><h2>Setup</h2><button class="btn" onclick="closeModal('settingsModal')">Close</button></div>
+  <label>Main offer</label><input id="setOffer" placeholder="$47 Break Point Audit"/>
+  <label>LinkedIn URL</label><input id="setLinkedIn" placeholder="https://www.linkedin.com/feed/"/>
+  <label>Offer / checkout URL</label><input id="setCheckout" placeholder="Gumroad or payment link"/>
+  <div class="form-grid">
+    <div><label>Daily DMs</label><input id="setDMs" type="number" min="0"/></div>
+    <div><label>Daily Comments</label><input id="setComments" type="number" min="0"/></div>
+    <div><label>Daily Follow-Ups</label><input id="setFollowups" type="number" min="0"/></div>
+    <div><label>Daily Posts</label><input id="setPosts" type="number" min="0"/></div>
+  </div>
+  <button class="btn primary" style="width:100%;margin-top:14px" onclick="saveSettings()">Save Setup</button>
+</div></div>
+
+<script>
+const todayKey = new Date().toISOString().slice(0,10);
+const baseCounts = {Post:0,Comment:0,DM:0,"Follow-Up":0,Reply:0,"Close Ask":0,Call:0,Sale:0};
+
+let settings = JSON.parse(localStorage.getItem("slSettingsV4") || "null") || {
+  offer:"$47 Break Point Audit",
+  linkedinUrl:"https://www.linkedin.com/feed/",
+  checkoutUrl:"",
+  targets:{Post:1,Comment:10,DM:10,"Follow-Up":5}
+};
+
+let state = loadState();
+let session = JSON.parse(localStorage.getItem("slSessionV4") || "null") || null;
+let timerInterval = null;
+let secondsLeft = Number(localStorage.getItem("slTimerV4") || 900);
+
+const actionMeta = [
+  {type:"Post",label:"Post",detail:"Publish diagnostic proof",value:"Public surface"},
+  {type:"Comment",label:"Comment",detail:"Earn buyer visibility",value:"Free reach"},
+  {type:"DM",label:"DM",detail:"Send outbound",value:"Create signal"},
+  {type:"Follow-Up",label:"Follow-Up",detail:"Touch open loop",value:"Recover money"},
+  {type:"Reply",label:"Reply",detail:"Capture interest",value:"New lead"},
+  {type:"Close Ask",label:"Ask",detail:"Make offer",value:"Revenue attempt"},
+  {type:"Call",label:"Call",detail:"Book / complete call",value:"High intent"},
+  {type:"Lead",label:"Lead",detail:"Add opportunity",value:"Pipeline"}
+];
+
+const scripts = [
+  {id:"dm", title:"Comment-to-DM bridge", when:"Use after leaving a useful comment.", text:"I liked your post. One thing I noticed is you are already saying something valuable, but the conversion angle could probably be sharper. I have a scanner that finds where people drop off if you want me to send it."},
+  {id:"follow", title:"Warm follow-up", when:"Use when someone replied or showed interest but stalled.", text:"Hey, quick follow-up. I looked at your page again and I think the biggest issue is not the offer itself. It looks like people are dropping before they understand why it matters. I can show you the exact spot I’d fix first if you want."},
+  {id:"ghost", title:"Ghosted lead recovery", when:"Use when someone disappeared.", text:"No pressure on this at all. I just did not want to leave the thread hanging. If fixing the drop-off point is still useful, send me the page or post and I’ll point you to the first thing I’d correct."},
+  {id:"close", title:"Direct close", when:"Use when the person understands the problem.", text:"Want me to do the $47 audit on this? I’ll mark the exact break point, explain why it is costing attention, and give you the correction sequence so you know what to change first."},
+  {id:"reply", title:"Reply-to-lead capture", when:"Use when someone says yes, sure, maybe, or asks a question.", text:"Perfect. Send me the page, post, or offer you want checked. I’ll look for where attention drops and tell you the first thing I’d fix."},
+  {id:"post", title:"Diagnostic post starter", when:"Use when you need to publish without overthinking.", text:"Most people do not have a traffic problem. They have a drop-off problem. The post works until one sentence makes the reader feel like the promise got vague. That sentence is usually where the sale dies."}
+];
+
+function loadState(){
+  const saved = JSON.parse(localStorage.getItem("signalLedgerV4") || "null");
+  if(!saved) return {date:todayKey,logs:[],leads:[],receipts:[],counts:{...baseCounts},streak:0,lastActive:null};
+  if(saved.date !== todayKey){
+    saved.date = todayKey;
+    saved.logs = [];
+    saved.counts = {...baseCounts};
+  }
+  return {...{date:todayKey,logs:[],leads:[],receipts:[],counts:{...baseCounts},streak:0,lastActive:null},...saved};
+}
+function persist(){localStorage.setItem("signalLedgerV4",JSON.stringify(state));localStorage.setItem("slSessionV4",JSON.stringify(session));render();}
+function toast(msg){const t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),1600)}
+function closeModal(id){document.getElementById(id).classList.remove("show")}
+function showView(id,el){document.querySelectorAll(".view").forEach(v=>v.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));el.classList.add("active");render()}
+function openExternal(url){window.open(url || "https://www.linkedin.com/feed/","_blank")}
+function escapeHtml(s){return String(s||"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[m]))}
+function escapeAttr(s){return String(s||"").replace(/\\/g,"\\\\").replace(/'/g,"&#39;").replace(/\n/g," ")}
+
+function daysSince(dateStr){
+  if(!dateStr) return 999;
+  const a = new Date(dateStr+"T00:00:00");
+  const b = new Date(todayKey+"T00:00:00");
+  return Math.floor((b-a)/86400000);
+}
+function leadScore(l){
+  const stage = {Lost:-50,Closed:-20,New:20,Warm:45,Hot:65,"Close Ready":85,Ghosted:35}[l.stage] || 20;
+  const signal = Number(l.signal || 1) * 8;
+  const decay = Math.min(daysSince(l.lastTouch || l.created) * 6, 30);
+  const value = String(l.value||"").includes("197") ? 12 : String(l.value||"").includes("97") ? 8 : String(l.value||"").includes("47") ? 5 : 2;
+  return Math.max(0, stage + signal + value - decay);
+}
+function sortedLeads(){
+  return [...state.leads].sort((a,b)=>leadScore(b)-leadScore(a));
+}
+function activeLeads(){
+  return sortedLeads().filter(l=>!["Closed","Lost"].includes(l.stage));
+}
+function bestLead(){
+  return activeLeads()[0] || null;
+}
+
+function markActivity(){
+  const yesterday = new Date(Date.now()-86400000).toISOString().slice(0,10);
+  if(state.lastActive !== todayKey){
+    state.streak = state.lastActive === yesterday ? (state.streak||0)+1 : 1;
+    state.lastActive = todayKey;
+  }
+}
+function quickLog(type){
+  if(type==="Lead"){openLeadModal();return}
+  if(type==="Sale"){openReceiptModal();return}
+  state.counts[type]=(state.counts[type]||0)+1;
+  markActivity();
+  state.logs.unshift({id:crypto.randomUUID(),type,platform:"Quick Log",time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"}),notes:""});
+  advanceSession(type);
+  persist(); toast(`${type} logged`);
+  if(type==="Reply") setTimeout(()=>{ if(confirm("Turn this reply into a lead?")) openLeadModal(); },100);
+}
+function openLogModal(type){document.getElementById("logType").value=type;document.getElementById("logLead").value="";document.getElementById("logNotes").value="";document.getElementById("logModal").classList.add("show")}
+function saveLog(){
+  const type=document.getElementById("logType").value, platform=document.getElementById("logPlatform").value, lead=document.getElementById("logLead").value.trim(), notes=document.getElementById("logNotes").value.trim();
+  state.counts[type]=(state.counts[type]||0)+1; markActivity();
+  state.logs.unshift({id:crypto.randomUUID(),type,platform,lead,notes,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});
+  if(type==="Reply" && lead) state.leads.unshift({id:crypto.randomUUID(),name:lead,platform,stage:"Warm",value:"Unknown",signal:2,next:"Send follow-up",created:todayKey,lastTouch:todayKey});
+  advanceSession(type);
+  closeModal("logModal"); persist(); toast("Activity saved");
+}
+function openLeadModal(){
+  ["leadName","leadNext"].forEach(id=>document.getElementById(id).value="");
+  document.getElementById("leadSignal").value="2";
+  document.getElementById("leadModal").classList.add("show");
+}
+function saveLead(){
+  const name=document.getElementById("leadName").value.trim(); if(!name){toast("Lead name required");return}
+  state.leads.unshift({
+    id:crypto.randomUUID(),name,
+    platform:document.getElementById("leadPlatform").value,
+    stage:document.getElementById("leadStage").value,
+    value:document.getElementById("leadValue").value,
+    signal:Number(document.getElementById("leadSignal").value||1),
+    next:document.getElementById("leadNext").value.trim()||"Send follow-up",
+    created:todayKey,lastTouch:todayKey
+  });
+  markActivity();
+  closeModal("leadModal"); persist(); toast("Lead added");
+}
+function openReceiptModal(){
+  ["receiptLead","receiptAmount","receiptNotes"].forEach(id=>document.getElementById(id).value="");
+  const l=bestLead();
+  if(l) document.getElementById("receiptLead").value=l.name;
+  document.getElementById("receiptModal").classList.add("show");
+}
+function saveReceipt(){
+  const lead=document.getElementById("receiptLead").value.trim()||"Unknown buyer", amount=Number(document.getElementById("receiptAmount").value||0);
+  state.receipts.unshift({id:crypto.randomUUID(),lead,amount,offer:document.getElementById("receiptOffer").value,notes:document.getElementById("receiptNotes").value.trim(),date:todayKey});
+  state.counts.Sale=(state.counts.Sale||0)+1; markActivity();
+  state.leads = state.leads.map(l => l.name.toLowerCase() === lead.toLowerCase() ? {...l, stage:"Closed", lastTouch:todayKey} : l);
+  advanceSession("Sale");
+  closeModal("receiptModal"); persist(); toast("Receipt saved");
+}
+function updateLead(id,stage){
+  state.leads=state.leads.map(l=>l.id===id?{...l,stage,lastTouch:todayKey}:l);
+  if(stage==="Closed") openReceiptModal();
+  persist(); toast(`Marked ${stage}`);
+}
+function deleteLead(id){state.leads=state.leads.filter(l=>l.id!==id);persist();toast("Lead removed")}
+function logFollowUpForLead(id){
+  const lead=state.leads.find(l=>l.id===id); if(!lead)return;
+  state.counts["Follow-Up"]=(state.counts["Follow-Up"]||0)+1; markActivity();
+  state.logs.unshift({id:crypto.randomUUID(),type:"Follow-Up",platform:lead.platform,lead:lead.name,notes:lead.next,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});
+  state.leads=state.leads.map(l=>l.id===id?{...l,lastTouch:todayKey,stage:l.stage==="New"?"Warm":l.stage}:l);
+  advanceSession("Follow-Up");
+  persist(); toast("Follow-up copied and logged");
+}
+function makeAskForLead(id){
+  const lead=state.leads.find(l=>l.id===id); if(!lead)return;
+  copyText(scripts.find(s=>s.id==="close").text);
+  state.counts["Close Ask"]=(state.counts["Close Ask"]||0)+1; markActivity();
+  state.logs.unshift({id:crypto.randomUUID(),type:"Close Ask",platform:lead.platform,lead:lead.name,notes:settings.offer,time:new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"})});
+  state.leads=state.leads.map(l=>l.id===id?{...l,lastTouch:todayKey,stage:l.stage==="New"?"Warm":l.stage}:l);
+  advanceSession("Close Ask");
+  persist(); toast("Ask copied and logged");
+}
+
+function getMove(){
+  const c=state.counts, active=activeLeads(), lead=bestLead();
+  const hasCloseReady = active.some(l=>["Close Ready","Hot"].includes(l.stage) || Number(l.signal||1)>=4);
+  const aged = active.filter(l=>daysSince(l.lastTouch||l.created)>=2);
+  if(active.length===0){
+    return {label:"Pipeline Empty",type:"DM",title:"Create your first revenue signal.",text:"You have no active leads. The only honest move is to create conversations.",command:"Send 3 useful DMs or add one real lead.",friend:"No pipeline means no mystery. Create signal first. The app should not let you hide in planning.",script:"dm"};
+  }
+  if(hasCloseReady && c["Close Ask"]<1){
+    return {label:"Close Trigger",type:"Close Ask",title:"Make the ask.",text:"You have a lead close enough to money. Do not keep nurturing when the next move is the offer.",command:`Ask ${lead ? lead.name : "your top lead"} if they want the ${settings.offer}.`,friend:"This is the moment where people avoid selling. Do not hint. Ask.",script:"close"};
+  }
+  if(aged.length){
+    return {label:"Decay Warning",type:"Follow-Up",title:"Recover aging leads.",text:"At least one open loop is getting stale. Lead decay costs money because urgency fades.",command:`Follow up with ${aged[0].name} before chasing new attention.`,friend:"A warm lead goes cold when you let silence do the talking. Recover it now.",script:"ghost"};
+  }
+  if(c["Follow-Up"] < 1 && active.length){
+    return {label:"Open Loop",type:"Follow-Up",title:"Touch the closest open lead.",text:"The closest money is already in motion. Follow up before chasing new people.",command:`Send one follow-up to ${lead ? lead.name : "your top lead"}.`,friend:"Your next sale is probably inside an open loop. Close the loop.",script:"follow"};
+  }
+  if(c.DM < Number(settings.targets.DM||10)){
+    return {label:"Outbound Required",type:"DM",title:"Send buyer DMs.",text:"You need direct conversations. More thinking will not replace outbound.",command:`Send DMs until you hit ${settings.targets.DM}.`,friend:"Outbound is still light. Three useful messages beat one perfect plan.",script:"dm"};
+  }
+  if(c.Comment < Number(settings.targets.Comment||10)){
+    return {label:"Visibility Gap",type:"Comment",title:"Earn visibility with useful comments.",text:"Comments are your free distribution layer. Go where buyers already are.",command:`Leave comments until you hit ${settings.targets.Comment}.`,friend:"Get visible where buyers already are. Specific comments, not generic applause.",script:"dm"};
+  }
+  if(c.Post < Number(settings.targets.Post||1)){
+    return {label:"Publish Proof",type:"Post",title:"Publish one diagnostic post.",text:"Show one break point. Do not teach everything. Make people want the diagnosis.",command:"Post one concrete failure example.",friend:"Post the diagnostic. It does not need to be perfect. It needs to exist.",script:"post"};
+  }
+  if(c["Follow-Up"] < Number(settings.targets["Follow-Up"]||5)){
+    return {label:"Finish Strong",type:"Follow-Up",title:"Finish your follow-up block.",text:"Old conversations are cheaper than new attention.",command:`Follow up until you hit ${settings.targets["Follow-Up"]}.`,friend:"You have motion. Recover the money in old conversations.",script:"follow"};
+  }
+  return {label:"Revenue Push",type:"Close Ask",title:"Make one clear offer.",text:"Enough movement. Now create a sales moment.",command:`Ask one warm person if they want the ${settings.offer}.`,friend:"Stop hinting. Make the offer cleanly.",script:"close"};
+}
+function pressureScore(){
+  let p=0;
+  const active=activeLeads();
+  if(active.length===0) p+=25;
+  p+=active.filter(l=>daysSince(l.lastTouch||l.created)>=2).length*18;
+  if((state.counts.DM||0)===0) p+=16;
+  if(active.length && (state.counts["Follow-Up"]||0)===0) p+=18;
+  if(active.some(l=>["Hot","Close Ready"].includes(l.stage)) && (state.counts["Close Ask"]||0)===0) p+=25;
+  return Math.min(100,p);
+}
+function runMainAction(){
+  const m=getMove();
+  if(m.type==="DM"){copyRecommendedScript(); openExternal(settings.linkedinUrl); quickLog("DM"); return;}
+  if(m.type==="Follow-Up"){
+    const l=bestLead();
+    if(l){copyText(getScriptText(m.script)); logFollowUpForLead(l.id); return;}
+    quickLog("Follow-Up"); return;
+  }
+  if(m.type==="Close Ask"){
+    const l=bestLead();
+    if(l){makeAskForLead(l.id); return;}
+    copyRecommendedScript(); quickLog("Close Ask"); return;
+  }
+  if(m.type==="Post"){copyRecommendedScript(); quickLog("Post"); return;}
+  quickLog(m.type);
+}
+function supportPush(){alert(getMove().friend)}
+function getScriptText(id){return (scripts.find(s=>s.id===id)||scripts[0]).text}
+function copyRecommendedScript(){copyText(getScriptText(getMove().script))}
+function copyText(text){navigator.clipboard.writeText(text).then(()=>toast("Copied"))}
+
+function buildSessionSteps(){
+  const m=getMove();
+  const steps=[];
+  if(activeLeads().length===0){
+    steps.push({type:"Comment",title:"Find buyer surface",text:"Leave 3 useful comments under buyer-relevant posts."});
+    steps.push({type:"DM",title:"Create conversations",text:"Send 3 DMs using the bridge script."});
+    steps.push({type:"Lead",title:"Capture signal",text:"Add any reply or warm opportunity as a lead."});
+  }else if(m.type==="Close Ask"){
+    steps.push({type:"Follow-Up",title:"Warm the lead",text:"Send one short message to your top lead."});
+    steps.push({type:"Close Ask",title:"Make the ask",text:`Ask for the ${settings.offer}.`});
+    steps.push({type:"Sale",title:"Save the receipt",text:"If money moves, log the receipt immediately."});
+  }else{
+    steps.push({type:"Follow-Up",title:"Close open loop",text:"Touch your top lead first."});
+    steps.push({type:"DM",title:"Create fresh signal",text:"Send 3 DMs after follow-up is done."});
+    steps.push({type:"Close Ask",title:"Make one offer",text:"Ask one warm person if they want the audit."});
+  }
+  return steps.map((s,i)=>({...s,done:false,index:i}));
+}
+function startSession(){
+  session={active:true,startedAt:new Date().toISOString(),steps:buildSessionSteps(),current:0};
+  secondsLeft=900; localStorage.setItem("slTimerV4",secondsLeft);
+  persist(); toast("Revenue session built");
+}
+function advanceSession(type){
+  if(!session || !session.active) return;
+  const current=session.steps[session.current];
+  if(!current) return;
+  if(current.type===type || (current.type==="Lead" && type==="Reply")){
+    current.done=true;
+    session.current += 1;
+    if(session.current >= session.steps.length){
+      session.active=false;
+      setTimeout(()=>alert("Revenue session complete. Check your receipts, leads, or next money move."),150);
+    }
+  }
+}
+function toggleTimer(){
+  const btn=document.getElementById("timerBtn");
+  if(timerInterval){clearInterval(timerInterval);timerInterval=null;btn.textContent="Start Timer";return}
+  if(!session || !session.active) startSession();
+  btn.textContent="Pause Timer";
+  timerInterval=setInterval(()=>{
+    secondsLeft=Math.max(0,secondsLeft-1);
+    localStorage.setItem("slTimerV4",secondsLeft);
+    renderTimer();
+    if(secondsLeft===0){
+      clearInterval(timerInterval);timerInterval=null;btn.textContent="Start Timer";
+      alert("Sprint complete. Log what you did, then take the next money move.");
+    }
+  },1000);
+}
+function renderTimer(){const m=String(Math.floor(secondsLeft/60)).padStart(2,"0"),s=String(secondsLeft%60).padStart(2,"0");document.getElementById("timer").textContent=`${m}:${s}`}
+
+function openSettings(){
+  document.getElementById("setOffer").value=settings.offer||"";
+  document.getElementById("setLinkedIn").value=settings.linkedinUrl||"";
+  document.getElementById("setCheckout").value=settings.checkoutUrl||"";
+  document.getElementById("setDMs").value=settings.targets.DM;
+  document.getElementById("setComments").value=settings.targets.Comment;
+  document.getElementById("setFollowups").value=settings.targets["Follow-Up"];
+  document.getElementById("setPosts").value=settings.targets.Post;
+  document.getElementById("settingsModal").classList.add("show");
+}
+function saveSettings(){
+  settings={offer:document.getElementById("setOffer").value.trim()||"$47 Break Point Audit",linkedinUrl:document.getElementById("setLinkedIn").value.trim()||"https://www.linkedin.com/feed/",checkoutUrl:document.getElementById("setCheckout").value.trim(),targets:{DM:Number(document.getElementById("setDMs").value||10),Comment:Number(document.getElementById("setComments").value||10),"Follow-Up":Number(document.getElementById("setFollowups").value||5),Post:Number(document.getElementById("setPosts").value||1)}};
+  localStorage.setItem("slSettingsV4",JSON.stringify(settings)); closeModal("settingsModal"); render(); toast("Setup saved");
+}
+function resetToday(){
+  if(!confirm("Reset today’s logs and counts? Leads and receipts stay saved."))return;
+  state.logs=[]; state.counts={...baseCounts}; session=null; secondsLeft=900; localStorage.setItem("slTimerV4",secondsLeft); persist(); toast("Today reset");
+}
+function exportCSV(){
+  const rows=[["type","platform","lead","notes","time"],...state.logs.map(l=>[l.type,l.platform||"",l.lead||"",l.notes||"",l.time||""])];
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
+  const blob=new Blob([csv],{type:"text/csv"}); const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download=`signal-ledger-${todayKey}.csv`; a.click(); URL.revokeObjectURL(a.href);
+}
+
+function render(){
+  const m=getMove();
+  document.getElementById("moveLabel").textContent=m.label;
+  document.getElementById("nextTitle").textContent=m.title;
+  document.getElementById("nextText").textContent=m.text;
+  document.getElementById("nextCommand").textContent=m.command;
+  const p=pressureScore();
+  document.getElementById("moveCard").classList.toggle("lockout",p>=55);
+  document.getElementById("coachText").textContent=coachText();
+  renderQuickActions(m.type);
+  renderSessionSteps();
+  renderTargets();
+  renderLeads();
+  renderOpenLoops();
+  renderScripts();
+  renderReceipts();
+  renderInsights();
+  renderMetrics();
+  renderTimer();
+}
+function renderQuickActions(nextType){
+  document.getElementById("quickActions").innerHTML=actionMeta.map(a=>`
+    <button class="action-card ${a.type===nextType?'recommended':''}" onclick="quickLog('${a.type}')">
+      <strong>${a.label}</strong><span>${a.detail}</span><em>${a.value}</em>
+    </button>
+  `).join("");
+}
+function renderSessionSteps(){
+  const el=document.getElementById("sessionSteps");
+  if(!session || !session.steps){
+    el.innerHTML=`<div class="empty"><b>No session running.</b>Start a revenue session to get a 3-step money path instead of random activity.</div>`;
+    document.getElementById("sessionStatus").textContent="Sprint inactive";
+    return;
+  }
+  document.getElementById("sessionStatus").textContent=session.active?`Step ${Math.min(session.current+1,session.steps.length)} of ${session.steps.length}`:"Session complete";
+  el.innerHTML=session.steps.map((s,i)=>`
+    <div class="session-step ${i===session.current&&session.active?'active':''} ${s.done?'done':''}">
+      <h3>${s.done?'Done: ':i===session.current?'Now: ':''}${s.title}</h3>
+      <p>${s.text}</p>
+      ${i===session.current&&session.active?`<button class="btn primary" onclick="quickLog('${s.type}')">Log ${s.type}</button>`:""}
+    </div>
+  `).join("");
+}
+function renderTargets(){
+  const keys=["Post","Comment","DM","Follow-Up"];
+  document.getElementById("targets").innerHTML=keys.map(k=>{
+    const val=state.counts[k]||0,t=settings.targets[k]||1,p=Math.min(100,Math.round(val/t*100));
+    return `<div class="target"><div class="row"><span>${k}</span><b>${val} / ${t}</b></div><div class="bar"><div class="fill" style="width:${p}%"></div></div></div>`;
+  }).join("");
+}
+function leadCard(l){
+  const score=leadScore(l), age=daysSince(l.lastTouch||l.created);
+  const cls=l.stage==="Hot"||l.stage==="Close Ready"?"hot":l.stage==="Warm"?"warm":l.stage==="Closed"?"closed":"";
+  const scriptId=l.stage==="Ghosted"||age>=2?"ghost":(l.stage==="Close Ready"||Number(l.signal||1)>=4?"close":"follow");
+  return `<div class="lead">
+    <div>
+      <h3>${escapeHtml(l.name)}</h3>
+      <p><span class="badge ${cls}">${l.stage}</span><span class="badge">${l.platform}</span><span class="badge">${l.value}</span><span class="badge score">Priority ${score}</span>${age>=2?`<span class="badge decay">${age}d stale</span>`:""}</p>
+      <p>Next: ${escapeHtml(l.next||"Send follow-up")}</p>
+      <div class="lead-priority"><span class="tiny">Signal: ${l.signal||1}/5</span><span class="tiny">Last touch: ${l.lastTouch||l.created||"Not logged"}</span></div>
+    </div>
+    <div class="stack">
+      <button class="btn primary" onclick="${scriptId==='close'?`makeAskForLead('${l.id}')`:`copyText('${escapeAttr(getScriptText(scriptId))}');logFollowUpForLead('${l.id}')`}">${scriptId==='close'?'Make Ask':'Copy + Log Follow-Up'}</button>
+      <button class="btn" onclick="updateLead('${l.id}','Close Ready')">Close Ready</button>
+      <button class="btn" onclick="updateLead('${l.id}','Hot')">Hot</button>
+      <button class="btn" onclick="updateLead('${l.id}','Ghosted')">Ghosted</button>
+      <button class="btn danger" onclick="deleteLead('${l.id}')">Remove</button>
+    </div>
+  </div>`;
+}
+function renderLeads(){
+  const active=activeLeads();
+  const priority=document.getElementById("priorityLead");
+  priority.innerHTML=active.length?leadCard(active[0]):`<div class="empty"><b>No priority lead.</b>Create one conversation first. Until then, the app will push outbound.</div>`;
+  document.getElementById("leadList").innerHTML=state.leads.length?sortedLeads().map(leadCard).join(""):`<div class="empty"><b>No pipeline yet.</b>Your first job is creating signal, not optimizing a dashboard.</div>`;
+}
+function renderOpenLoops(){
+  const loops=[];
+  const aged=activeLeads().filter(l=>daysSince(l.lastTouch||l.created)>=2);
+  if(aged.length) loops.push(["Lead decay",`${aged[0].name} has not been touched in ${daysSince(aged[0].lastTouch||aged[0].created)} days.`]);
+  if(activeLeads().some(l=>["Hot","Close Ready"].includes(l.stage)) && (state.counts["Close Ask"]||0)===0) loops.push(["Ask avoided","You have a hot lead but no close ask logged today."]);
+  if((state.counts.DM||0)===0) loops.push(["No outbound","You have not created new signal today."]);
+  if(activeLeads().length && (state.counts["Follow-Up"]||0)===0) loops.push(["No follow-up","Active leads exist, but none have been touched today."]);
+  document.getElementById("openLoops").innerHTML=loops.length?loops.map(l=>`<div class="rule"><h3>${l[0]}</h3><p>${l[1]}</p></div>`).join(""):`<div class="empty"><b>No major open loops.</b>Keep executing the session path.</div>`;
+}
+function renderScripts(){
+  document.getElementById("scriptList").innerHTML=scripts.map(s=>`<div class="script"><h3>${s.title}</h3><p>${s.when}</p><textarea readonly>${s.text}</textarea><button class="btn primary" style="margin-top:10px" onclick="copyText('${escapeAttr(s.text)}')">Copy Script</button></div>`).join("");
+}
+function renderReceipts(){
+  document.getElementById("receiptList").innerHTML=state.receipts.length?state.receipts.map(r=>`<div class="receipt"><div><b>${escapeHtml(r.lead)}</b><p>${r.offer} · ${r.date}${r.notes?" · "+escapeHtml(r.notes):""}</p></div><div class="amount">$${Number(r.amount||0).toLocaleString()}</div></div>`).join(""):`<div class="empty"><b>No receipts yet.</b>When money moves, log it here so you can repeat the behavior that created it.</div>`;
+}
+function coachText(){
+  const c=state.counts, active=activeLeads(), p=pressureScore();
+  if(active.length===0) return "Pipeline is empty. The right move is outbound, not more planning.";
+  if(p>=70) return "High pressure. A lead is aging, a close ask is missing, or outbound is too low. Fix the open loop now.";
+  if(active.some(l=>["Hot","Close Ready"].includes(l.stage)) && (c["Close Ask"]||0)===0) return "You have a close-ready lead. The app is not here to help you hide from the ask.";
+  if((c.DM||0)>=3 && (c.Reply||0)===0) return "You are creating attempts but not replies yet. Tighten the opener or target better buyers.";
+  if((c.Reply||0)>0 && active.length && (c["Close Ask"]||0)===0) return "You have signals but no ask. That is a conversion behavior problem, not a content problem.";
+  return "Good. Keep the loop clean: copy, send, log, follow up, ask.";
+}
+function renderInsights(){
+  const c=state.counts, active=activeLeads(), total=state.receipts.reduce((s,r)=>s+Number(r.amount||0),0);
+  const items=[];
+  items.push(["Current diagnosis",coachText()]);
+  if(active.length===0) items.push(["Pipeline constraint","No active leads means every advanced feature is secondary. The app should force signal creation."]);
+  if(c.DM < settings.targets.DM) items.push(["Outbound gap",`You are at ${c.DM}/${settings.targets.DM} DMs. Demand cannot be judged without enough attempts.`]);
+  if(active.length && c["Follow-Up"]<settings.targets["Follow-Up"]) items.push(["Recovery gap",`You are at ${c["Follow-Up"]}/${settings.targets["Follow-Up"]} follow-ups. Old conversations are cheaper than new traffic.`]);
+  if(active.some(l=>["Hot","Close Ready"].includes(l.stage)) && c["Close Ask"]===0) items.push(["Closing gap","Hot leads without an ask are lost sales in slow motion."]);
+  if(total>0) items.push(["Revenue signal",`You logged $${total.toLocaleString()}. Repeat the exact action chain that produced it.`]);
+  items.push(["10/10 product rule","Every screen must shorten the distance between intent and revenue behavior. If a feature does not push action, it gets removed."]);
+  document.getElementById("insightList").innerHTML=items.map(i=>`<div class="insight"><h3>${i[0]}</h3><p>${i[1]}</p></div>`).join("");
+}
+function renderMetrics(){
+  const totalActions=Object.values(state.counts).reduce((a,b)=>a+b,0);
+  const sales=state.receipts.reduce((s,r)=>s+Number(r.amount||0),0);
+  document.getElementById("metricActions").textContent=totalActions;
+  document.getElementById("metricLeads").textContent=activeLeads().length;
+  document.getElementById("metricSales").textContent="$"+sales.toLocaleString();
+  const score=Math.min(100,(state.counts.Post||0)*13+Math.min((state.counts.Comment||0)*3,25)+Math.min((state.counts.DM||0)*4,30)+Math.min((state.counts["Follow-Up"]||0)*6,30)+(state.counts.Reply||0)*8+(state.counts["Close Ask"]||0)*15+(state.counts.Sale||0)*25);
+  document.getElementById("scoreNum").textContent=score;
+  document.getElementById("scoreFill").style.width=score+"%";
+  document.getElementById("streakNum").textContent=state.streak||0;
+  document.getElementById("pressureNum").textContent=pressureScore();
+  document.getElementById("recentLog").innerHTML=state.logs.slice(0,4).map(l=>`<div class="mini-item"><span>${l.type}${l.lead?" · "+escapeHtml(l.lead):""}</span><b>${l.time}</b></div>`).join("") || `<div class="mini-item"><span>No actions logged yet</span><b>Start now</b></div>`;
+}
+document.querySelectorAll(".modal").forEach(m=>m.addEventListener("click",e=>{if(e.target===m)m.classList.remove("show")}));
+render();
+</script>
+</body>
+</html>
