@@ -6,14 +6,81 @@
 <title>Signal Ledger — Revenue Operator Mode</title>
 
 <style>
-body{margin:0;font-family:Arial;background:#05060a;color:#fff}
-.container{max-width:900px;margin:auto;padding:20px}
-.card{background:#0f1117;border-radius:14px;padding:16px;margin-bottom:14px;border:1px solid #222}
-button{padding:14px;border-radius:10px;border:none;cursor:pointer;font-weight:bold;margin-top:8px}
-.primary{background:#43e09b;color:black;width:100%;font-size:18px}
-.lockout{opacity:.3;pointer-events:none}
-.hot{border:2px solid red;box-shadow:0 0 10px red}
-.section{font-size:12px;color:#777;text-transform:uppercase;margin-bottom:6px}
+:root{
+--bg:#06070a;
+--panel:#10131a;
+--panel2:#171b25;
+--line:#2a3142;
+--text:#f6f8fc;
+--muted:#a6afc1;
+--green:#43e09b;
+--red:#ff6b6b;
+--blue:#7aa7ff;
+}
+
+body{
+margin:0;
+background:var(--bg);
+color:var(--text);
+font-family:Arial;
+}
+
+.container{
+max-width:1100px;
+margin:auto;
+padding:16px;
+}
+
+.card{
+background:var(--panel);
+border:1px solid var(--line);
+border-radius:16px;
+padding:16px;
+margin-bottom:14px;
+}
+
+.top{
+display:flex;
+justify-content:space-between;
+align-items:center;
+margin-bottom:14px;
+}
+
+.btn{
+padding:12px;
+border-radius:10px;
+border:none;
+cursor:pointer;
+font-weight:bold;
+}
+
+.primary{
+background:var(--green);
+color:black;
+}
+
+.lock{
+opacity:.3;
+pointer-events:none;
+}
+
+.hot{
+border:2px solid red;
+box-shadow:0 0 10px red;
+}
+
+.section{
+font-size:12px;
+color:var(--muted);
+margin-bottom:6px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:12px;
+}
+
 </style>
 </head>
 
@@ -21,28 +88,37 @@ button{padding:14px;border-radius:10px;border:none;cursor:pointer;font-weight:bo
 
 <div class="container">
 
+<div class="top">
 <h2>Revenue Operator Mode</h2>
+<button class="btn primary" onclick="makeMoney()">MAKE MONEY</button>
+</div>
 
+<!-- MONEY AT RISK -->
 <div class="card">
 <div class="section">Money at Risk</div>
 <h1 id="risk">$0</h1>
 <p id="riskText">No active leads</p>
 </div>
 
+<div class="grid">
+
+<!-- LEAD -->
 <div class="card" id="leadCard">
 <div class="section">Priority Lead</div>
 <h2 id="leadName">None</h2>
 <p id="leadInfo"></p>
 </div>
 
+<!-- NEXT MOVE -->
 <div class="card">
 <div class="section">Next Move</div>
 <h2 id="nextMove">Start by sending DMs</h2>
 <p id="nextSub"></p>
 </div>
 
-<button class="primary" id="moneyBtn" onclick="makeMoney()">MAKE MONEY</button>
+</div>
 
+<!-- ACTIONS -->
 <div class="card" id="actions">
 <div class="section">Actions</div>
 <button onclick="log('DM')">Send DM</button>
@@ -51,11 +127,13 @@ button{padding:14px;border-radius:10px;border:none;cursor:pointer;font-weight:bo
 <button onclick="addLead()">Add Lead</button>
 </div>
 
+<!-- OPEN LOOPS -->
 <div class="card">
 <div class="section">Open Loops</div>
 <div id="loops"></div>
 </div>
 
+<!-- STATUS -->
 <div class="card">
 <div class="section">Status</div>
 <p id="status"></p>
@@ -65,154 +143,165 @@ button{padding:14px;border-radius:10px;border:none;cursor:pointer;font-weight:bo
 
 <script>
 
+// STATE
 let state = {
-  leads: [],
-  logs: { DM:0, FollowUp:0, Ask:0 }
+leads:[],
+logs:{DM:0,FollowUp:0,Ask:0}
 };
 
+// ADD LEAD
 function addLead(){
-  let name = prompt("Lead name");
-  if(!name) return;
+let name = prompt("Lead name");
+if(!name) return;
 
-  state.leads.push({
-    name,
-    value:47,
-    stage:"Warm",
-    signal:2,
-    lastTouch:0
-  });
+state.leads.push({
+name,
+value:47,
+stage:"Warm",
+signal:2
+});
 
-  render();
+render();
 }
 
+// SCORING
 function score(l){
-  let s = l.value;
-
-  if(l.stage==="Close Ready") s += 60;
-  if(l.stage==="Hot") s += 30;
-  if(l.signal>=4) s += 20;
-
-  return s;
+let s = l.value;
+if(l.stage==="Close Ready") s+=60;
+if(l.stage==="Hot") s+=30;
+if(l.signal>=4) s+=20;
+return s;
 }
 
 function bestLead(){
-  if(state.leads.length===0) return null;
-  return state.leads.sort((a,b)=>score(b)-score(a))[0];
+if(state.leads.length===0) return null;
+return state.leads.sort((a,b)=>score(b)-score(a))[0];
 }
 
+// MONEY
 function moneyAtRisk(){
-  return state.leads.reduce((sum,l)=>sum+l.value,0);
+return state.leads.reduce((s,l)=>s+l.value,0);
 }
 
+// LOGGING
 function log(type){
-  state.logs[type]++;
-  render();
+state.logs[type]++;
+render();
 }
 
+// MAKE MONEY ENGINE
 function makeMoney(){
-  let lead = bestLead();
 
-  if(!lead){
-    copy("Want me to run a quick audit?");
-    openLinkedIn();
-    log("DM");
-    return;
-  }
+let lead = bestLead();
 
-  if(lead.stage==="Close Ready" || lead.signal>=4){
-    copy("Want me to run the $47 audit?");
-    log("Ask");
-  } else {
-    copy("Quick follow-up — still want me to check this?");
-    log("FollowUp");
-  }
-
-  openLinkedIn();
+if(!lead){
+copy("Want me to run a quick audit?");
+openLinkedIn();
+log("DM");
+return;
 }
 
-function copy(text){
-  navigator.clipboard.writeText(text);
+if(lead.stage==="Close Ready" || lead.signal>=4){
+copy("Want me to run the $47 audit?");
+log("Ask");
+}else{
+copy("Quick follow-up — still want me to check this?");
+log("FollowUp");
+}
+
+openLinkedIn();
+}
+
+// HELPERS
+function copy(t){
+navigator.clipboard.writeText(t);
 }
 
 function openLinkedIn(){
-  window.open("https://www.linkedin.com/feed/");
+window.open("https://www.linkedin.com/feed/");
+}
+
+// LOGIC
+function hasCloseLead(){
+return state.leads.some(l=>l.stage==="Close Ready" || l.signal>=4);
 }
 
 function nextMove(){
-  if(state.leads.length===0){
-    return ["Send DMs now","No pipeline"];
-  }
 
-  if(hasCloseLead() && state.logs.Ask===0){
-    return ["MAKE THE ASK","Stop avoiding it"];
-  }
+if(state.leads.length===0)
+return ["Send DMs now","You have no pipeline"];
 
-  if(state.logs.FollowUp===0){
-    return ["Follow up now","Money is sitting idle"];
-  }
+if(hasCloseLead() && state.logs.Ask===0)
+return ["MAKE THE ASK","Stop avoiding it"];
 
-  return ["Keep going","Stay in motion"];
-}
+if(state.logs.FollowUp===0)
+return ["Follow up now","You are leaving money"];
 
-function hasCloseLead(){
-  return state.leads.some(l=>l.stage==="Close Ready"||l.signal>=4);
+return ["Continue execution","Stay in motion"];
 }
 
 function isLocked(){
-  return state.leads.length>0 && state.logs.FollowUp===0;
+return state.leads.length>0 && state.logs.FollowUp===0;
 }
 
+// RENDER
 function render(){
 
-  let risk = moneyAtRisk();
-  document.getElementById("risk").innerText="$"+risk;
+// MONEY
+let risk = moneyAtRisk();
+document.getElementById("risk").innerText="$"+risk;
+document.getElementById("riskText").innerText =
+risk>0 ? "This disappears if you don’t act" : "No active leads";
 
-  document.getElementById("riskText").innerText =
-    risk>0 ? "This disappears if you don’t act" : "No active leads";
+// LEAD
+let lead = bestLead();
+document.getElementById("leadName").innerText = lead?lead.name:"None";
+document.getElementById("leadInfo").innerText =
+lead?("$"+lead.value+" • "+lead.stage):"";
 
-  let lead = bestLead();
-  document.getElementById("leadName").innerText = lead ? lead.name : "None";
-  document.getElementById("leadInfo").innerText =
-    lead ? "$"+lead.value+" • "+lead.stage : "";
+let card = document.getElementById("leadCard");
+card.classList.remove("hot");
 
-  let card = document.getElementById("leadCard");
-  card.classList.remove("hot");
+if(lead && (lead.stage==="Close Ready" || lead.signal>=4)){
+card.classList.add("hot");
+}
 
-  if(lead && (lead.stage==="Close Ready" || lead.signal>=4)){
-    card.classList.add("hot");
-  }
+// NEXT MOVE
+let [m,sub] = nextMove();
+document.getElementById("nextMove").innerText=m;
+document.getElementById("nextSub").innerText=sub;
 
-  let [move,sub] = nextMove();
-  document.getElementById("nextMove").innerText = move;
-  document.getElementById("nextSub").innerText = sub;
+// LOCK SYSTEM
+let actions = document.getElementById("actions");
 
-  let actions = document.getElementById("actions");
+if(isLocked()){
+actions.classList.add("lock");
+document.getElementById("nextSub").innerText =
+"You are avoiding money. Follow up first.";
+}else{
+actions.classList.remove("lock");
+}
 
-  if(isLocked()){
-    actions.classList.add("lockout");
-    document.getElementById("nextSub").innerText =
-      "You are avoiding money. Follow up first.";
-  } else {
-    actions.classList.remove("lockout");
-  }
+// LOOPS
+let loops="";
+state.leads.forEach(l=>{
+loops+=`<p>${l.name} — open</p>`;
+});
 
-  let loops = "";
-  state.leads.forEach(l=>{
-    loops += `<p>${l.name} — open</p>`;
-  });
+document.getElementById("loops").innerHTML =
+loops || "No open conversations";
 
-  document.getElementById("loops").innerHTML =
-    loops || "No open conversations";
+// STATUS
+let status="";
 
-  let status = "";
+if(state.logs.Ask===0){
+status="You chose not to make money today";
+}else{
+status="You are executing";
+}
 
-  if(state.logs.Ask===0){
-    status = "You chose not to make money today";
-  } else {
-    status = "You are executing";
-  }
+document.getElementById("status").innerText=status;
 
-  document.getElementById("status").innerText = status;
 }
 
 render();
